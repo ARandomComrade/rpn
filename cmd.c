@@ -33,6 +33,10 @@
 #include <sys/types.h>
 #include "rpn.h"
 
+#ifdef __linux__
+#include <arpa/inet.h>
+#endif
+
 int repeat = 1;
 extern int stackmode;
 extern int padcount;
