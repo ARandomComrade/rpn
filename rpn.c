@@ -162,6 +162,8 @@ printstk(char *prompt)
 			putchar('\n');
 	}
 
+	if(stackmode)
+		putchar('\n');
 	fputs(prompt, stdout);
 }
 
