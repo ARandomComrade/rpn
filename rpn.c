@@ -12,6 +12,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include <assert.h>
+#include <unistd.h>
 #include "rpn.h"
 
 int base = DEFBASE, stop = 0;
@@ -271,8 +272,6 @@ process(char *str)
 		}
 	}
 }
-
-int isatty(int);
 
 static void
 pushstack(void) {
