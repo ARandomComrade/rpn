@@ -117,7 +117,6 @@ popobj(struct object *obj)
 		else
 			obj->next->prev = obj->prev;
 		obj->prev->next = obj->next;
-
 		M->d--;
 	}
 	free(obj);
@@ -140,7 +139,7 @@ printnum(unsigned long num, int base, int padto)
 
 	while (ptr > str) {
 		putchar(*--ptr);
-		if(base == 2 && ((unsigned long)ptr % 4) == 0)
+		if (base == 2 && ((unsigned long)ptr % 4) == 0)
 			putchar('.');
 	}
 
@@ -158,12 +157,13 @@ printstk(char *prompt)
 		else
 			printnum(obj->num, base, padcount);
 
-		if(stackmode && obj->prev)
+		if (stackmode && obj->prev)
 			putchar('\n');
 	}
 
-	if(stackmode)
+	if (stackmode)
 		putchar('\n');
+
 	fputs(prompt, stdout);
 }
 
@@ -218,7 +218,7 @@ process(char *str)
 {
 	int x;
 	char *suffix, word[100];
-        char *tmp, *tmp2;
+	char *tmp, *tmp2;
 
 	while (*str != '\0') {
 		while (isspace(*str))
@@ -230,23 +230,27 @@ process(char *str)
 		word[x] = '\0';
 		if ((suffix = strchr(word, BASECHAR)) != NULL) {
 			*suffix++ = '\0';
-                        tmp = tmp2 = word;
-                        while (*tmp2 != '\0') {
-                            if (*tmp2 == ',') tmp2++;
-                            else *tmp++ = *tmp2++;
-                        }
-                        *tmp++ = *tmp2++;
+			tmp = tmp2 = word;
+			while (*tmp2 != '\0') {
+				if (*tmp2 == ',')
+					tmp2++;
+				else
+					*tmp++ = *tmp2++;
+			}
+			*tmp++ = *tmp2++;
 			if (word[0] == '-')
 				pushnum(strtol(word, NULL, atoi(suffix)));
 			else
 				pushnum(strtoul(word, NULL, atoi(suffix)));
 		} else if (isnum(word)) {
-                        tmp = tmp2 = word;
-                        while (*tmp2 != '\0') {
-                            if (*tmp2 == ',') tmp2++;
-                            else *tmp++ = *tmp2++;
-                        }
-                        *tmp++ = *tmp2++;
+			tmp = tmp2 = word;
+			while (*tmp2 != '\0') {
+				if (*tmp2 == ',')
+					tmp2++;
+				else
+					*tmp++ = *tmp2++;
+			}
+			*tmp++ = *tmp2++;
 			if (isnotfloat(word)) {
 				if (word[0] == '-')
 					pushnum(strtol(word, &suffix, 0));
@@ -276,7 +280,7 @@ pushstack(void) {
 	struct object *o = top();
 	m->n = M;
 	M = m;
-	if(o)
+	if (o)
 		pushnum(o->num);
 }
 
@@ -291,10 +295,10 @@ freestack(struct metastack *m) {
 static void
 popstack(void) {
 	struct object *o = top();
-	if(M->n) {
+	if (M->n) {
 		struct metastack *m = M;
 		M = M->n;
-		if(o)
+		if (o)
 			pushnum(o->num);
 
 		freestack(m);
@@ -304,7 +308,7 @@ popstack(void) {
 static void
 init(void) {
 	struct command pushs = { "pushs", 0, pushstack },
-   	 	       pops = { "pops", 0, popstack };
+			pops = { "pops", 0, popstack };
 	addcommand(&pushs);
 	addcommand(&pops);
 	srand(time(NULL));

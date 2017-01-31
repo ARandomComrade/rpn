@@ -639,25 +639,27 @@ init_macros(void)
 	addmacro("?", "help");
 
 	if (env) {
-	    char buf[10240];
-	    FILE *fp;
-	    char *p;
-	    snprintf(buf, sizeof(buf), "%s/.rpn_macros", env);
+		char buf[10240];
+		FILE *fp;
+		char *p;
+		snprintf(buf, sizeof(buf), "%s/.rpn_macros", env);
 
-	    fp = fopen(buf, "r");
-	    if (fp) {
-		while (fgets(buf, sizeof(buf), fp) != NULL) {
-		    if(buf[0] == '#')
-			continue;
+		fp = fopen(buf, "r");
+		if (fp) {
+			while (fgets(buf, sizeof(buf), fp) != NULL) {
+				if (buf[0] == '#')
+					continue;
 
-		    p = buf;
-		    while (*p && *p != ' ') p++;
-		    if (*p) {
-			*p++ = 0;
-			addmacro(strdup(buf), strdup(p));
-		    }
+				p = buf;
+				while (*p && *p != ' ')
+					p++;
+
+				if (*p) {
+					*p++ = 0;
+					addmacro(strdup(buf), strdup(p));
+				}
+			}
 		}
-	    }
 	}
 }
 
@@ -762,7 +764,7 @@ cmd_help(void)
 	if (macrohead != NULL) {
 		puts("Macros:");
 		for (macro = macrohead, x = 0; macro != NULL; macro = macro->next) {
-			if(macro->name[0] == '$')
+			if (macro->name[0] == '$')
 				continue;
 
 			printf("%8s", macro->name);
@@ -790,10 +792,10 @@ cmdrefresh(void) {
 
 void
 addcommand(struct command *c) {
-	if(!roomcmds) {
+	if (!roomcmds) {
 		struct command *ca = malloc((numcmds * 2) * sizeof *commands);
 		memcpy(ca, commands, numcmds * sizeof *commands);
-		if(commands != _commands)
+		if (commands != _commands)
 			free(commands);
 
 		commands = ca;
