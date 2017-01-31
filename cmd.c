@@ -454,7 +454,7 @@ cmd_quit(void)
 static void
 cmd_rand(void)
 {
-	pushnum(rand());
+	pushnum(arc4random());
 }
 
 static void
@@ -641,7 +641,8 @@ init_macros(void)
 	if (env) {
 	    char buf[10240];
 	    FILE *fp;
-	    sprintf(buf, "%s/.rpn_macros", env);
+	    char *p;
+	    snprintf(buf, sizeof(buf), "%s/.rpn_macros", env);
 
 	    fp = fopen(buf, "r");
 	    if (fp) {
@@ -649,7 +650,7 @@ init_macros(void)
 		    if(buf[0] == '#')
 			continue;
 
-		    char *p = buf;
+		    p = buf;
 		    while (*p && *p != ' ') p++;
 		    if (*p) {
 			*p++ = 0;
