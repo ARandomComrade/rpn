@@ -322,6 +322,8 @@ init(void) {
 int
 main(int argc, char *argv[])
 {
+	char buf[1000];
+
 	init();
 
 	if (argc > 1) {
@@ -329,18 +331,20 @@ main(int argc, char *argv[])
 		for (x = 1; x < argc; x++)
 			process(argv[x]);
 		printstk("\n");
-	} else {
-		int interactive = isatty(0);
-		char buf[1000];
-		if (interactive)
-			printstk("> ");
-		while (fgets(buf, sizeof buf, stdin) != NULL) {
+		return 0;
+	}
+
+	if (!isatty(0)) {
+		while (fgets(buf, sizeof buf, stdin) != NULL)
 			process(buf);
-			if (interactive)
-				printstk("> ");
-		}
-		if (!interactive)
-			printstk("\n");
+		printstk("\n");
+		return 0;
+	}
+
+	printstk("> ");
+	while (fgets(buf, sizeof buf, stdin) != NULL) {
+		process(buf);
+		printstk("> ");
 	}
 
 	return 0;
