@@ -1,8 +1,8 @@
 # Makefile for Unix, using GNU C
 
-#CC = gcc
-#CFLAGS = -O2 -Wall -Wstrict-prototypes -ansi -pedantic 
-#CFLAGS = -g
+CC = gcc
+CFLAGS = -O2 -Wall -Wstrict-prototypes -ansi -pedantic 
+CFLAGS = -g
 LFLAGS = -lm 
 
 OBJS = rpn.o cmd.o
