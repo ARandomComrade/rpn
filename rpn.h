@@ -2,7 +2,9 @@
  * rpn - Mycroft <mycroft@datasphere.net>
  */
 
-#define VERSION		0.51
+#include "linenoise.h"
+
+#define VERSION		0.69
 
 #define MAXSIZE		10
 #define DEFBASE		10
@@ -45,3 +47,5 @@ struct command *findcmd(char *);
 void popobj(struct object *), pushnum(double), init_macros(void), error(char *);
 unsigned countstack(void);
 double peeknthnum(unsigned off);
+void completion(const char *, linenoiseCompletions *);
+

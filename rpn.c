@@ -123,6 +123,22 @@ popobj(struct object *obj)
 	free(obj);
 }
 
+static char *
+convertbase(unsigned long num, int base)
+{
+	static char converted[100];
+	static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+	int i;
+
+	converted[99] = '\0';
+	for (i=98; num && i; i--) {
+		converted[i] = digits[num % base];
+		printf("%d %lu %lu %s\n", i, num, num % base, &converted[i]);
+		num = num / base;
+	}
+	return &converted[i+1];
+}
+
 static void
 printnum(unsigned long num, int base, int padto)
 {
@@ -135,7 +151,7 @@ printnum(unsigned long num, int base, int padto)
 	while ((num /= base) != 0);
 
 	padc = padto - (ptr - str);
-	while(padc > 0)
+	while (padc > 0)
 		padc--, putchar('0');
 
 	while (ptr > str) {
@@ -166,6 +182,31 @@ printstk(char *prompt)
 		putchar('\n');
 
 	fputs(prompt, stdout);
+}
+
+char *
+format_stack(char *sep)
+{
+	struct object *obj;
+	char *str;
+	int len;
+
+	for (len = 0, obj = M->b; obj != NULL; obj = obj->prev) {
+		if (base == 10) {
+			len += asprintf(&str, "%.12g%s", obj->num, sep);
+			free(str);
+		} else
+			printnum(obj->num, base, padcount);
+	}
+	str = calloc(1, len + 3);
+	for (len = 0, obj = M->b; obj != NULL; obj = obj->prev) {
+		if (base == 10) {
+			len += sprintf(str + len, "%.12g%s", obj->num, sep);
+		} else
+			printnum(obj->num, base, padcount);
+	}
+	sprintf(str + len, "> ");
+	return str;
 }
 
 static void
@@ -323,6 +364,16 @@ int
 main(int argc, char *argv[])
 {
 	char buf[1000];
+	char *line, *prompt;
+	char history[1000];
+	if (getenv("HOME")) {
+		snprintf(history, sizeof(history), "%s/.rpn_history", getenv("HOME"));
+		linenoiseHistoryLoad(history);
+	}
+
+	/*printf("<%s>\n", convertbase(255, 16));
+	printf("<%s>\n", convertbase(255, 2));
+	return 0;*/
 
 	init();
 
@@ -341,10 +392,19 @@ main(int argc, char *argv[])
 		return 0;
 	}
 
-	printstk("> ");
-	while (fgets(buf, sizeof buf, stdin) != NULL) {
-		process(buf);
-		printstk("> ");
+	linenoiseSetCompletionCallback(completion);
+	/*linenoiseSetHintsCallback(hints);*/
+
+	asprintf(&prompt, "> ");
+	while ((line = linenoise(prompt)) != NULL) {
+		if (line[0] != '\0') {
+			linenoiseHistoryAdd(line);
+			linenoiseHistorySave(history);
+			process(line);
+			free(line);
+			free(prompt);
+			prompt = format_stack(" ");
+		}
 	}
 
 	return 0;

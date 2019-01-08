@@ -31,6 +31,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+/*#include <bsd/stdlib.h>*/
+#include <arpa/inet.h>
 #include "rpn.h"
 
 int repeat = 1;
@@ -817,3 +819,28 @@ findcmd(char *cmd)
 
 	return bsearch(&c, commands, numcmds, sizeof *commands, cmdcmp);
 }
+
+void
+completion(const char *buf, linenoiseCompletions *lc)
+{
+	int x;
+	struct macro *macro;
+	size_t len = strlen(buf);
+	if (!len)
+		return;
+
+	for (x = 0; x < NUMCMDS; x++) {
+		if (!strncmp(buf, commands[x].name, len))
+			linenoiseAddCompletion(lc, commands[x].name);
+	}
+
+	if (macrohead != NULL) {
+		for (macro = macrohead, x = 0; macro != NULL; macro = macro->next) {
+			if (macro->name[0] == '$')
+				continue;
+			if (!strncmp(buf, macro->name, len))
+				linenoiseAddCompletion(lc, macro->name);
+		}
+	}
+}
+
