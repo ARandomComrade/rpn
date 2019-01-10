@@ -133,59 +133,16 @@ convertbase(unsigned long num, int base)
 	converted[99] = '\0';
 	for (i=98; num && i; i--) {
 		converted[i] = digits[num % base];
-		printf("%d %lu %lu %s\n", i, num, num % base, &converted[i]);
 		num = num / base;
+	}
+	while (padcount > 98 - i) {
+		converted[i--] = digits[0];
 	}
 	return &converted[i+1];
 }
 
-static void
-printnum(unsigned long num, int base, int padto)
-{
-	static char str[sizeof num * CHAR_BIT], *ptr = str;
-	static char nums[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	int padc = 0;
-
-	do
-		*ptr++ = nums[num % base];
-	while ((num /= base) != 0);
-
-	padc = padto - (ptr - str);
-	while (padc > 0)
-		padc--, putchar('0');
-
-	while (ptr > str) {
-		putchar(*--ptr);
-		if (base == 2 && ((unsigned long)ptr % 4) == 0)
-			putchar('.');
-	}
-
-	putchar(' ');
-}
-
-static void
-printstk(char *prompt)
-{
-	struct object *obj;
-
-	for (obj = M->b; obj != NULL; obj = obj->prev) {
-		if (base == 10)
-			printf("%.12g ", obj->num);
-		else
-			printnum(obj->num, base, padcount);
-
-		if (stackmode && obj->prev)
-			putchar('\n');
-	}
-
-	if (stackmode)
-		putchar('\n');
-
-	fputs(prompt, stdout);
-}
-
-char *
-format_stack(char *sep)
+static char *
+format_stack(char *sep, char *prompt)
 {
 	struct object *obj;
 	char *str;
@@ -196,16 +153,16 @@ format_stack(char *sep)
 			len += asprintf(&str, "%.12g%s", obj->num, sep);
 			free(str);
 		} else
-			printnum(obj->num, base, padcount);
+			len += strlen(convertbase(obj->num, base));
 	}
-	str = calloc(1, len + 3);
+	str = calloc(1, len + strlen(prompt) + 1);
 	for (len = 0, obj = M->b; obj != NULL; obj = obj->prev) {
 		if (base == 10) {
 			len += sprintf(str + len, "%.12g%s", obj->num, sep);
 		} else
-			printnum(obj->num, base, padcount);
+			len += sprintf(str + len, "%s%s", convertbase(obj->num, base), sep);
 	}
-	sprintf(str + len, "> ");
+	strcpy(str + len, prompt);
 	return str;
 }
 
@@ -364,16 +321,7 @@ int
 main(int argc, char *argv[])
 {
 	char buf[1000];
-	char *line, *prompt;
-	char history[1000];
-	if (getenv("HOME")) {
-		snprintf(history, sizeof(history), "%s/.rpn_history", getenv("HOME"));
-		linenoiseHistoryLoad(history);
-	}
-
-	/*printf("<%s>\n", convertbase(255, 16));
-	printf("<%s>\n", convertbase(255, 2));
-	return 0;*/
+	char *line, *prompt, *histfile;
 
 	init();
 
@@ -381,29 +329,35 @@ main(int argc, char *argv[])
 		int x;
 		for (x = 1; x < argc; x++)
 			process(argv[x]);
-		printstk("\n");
+		puts(format_stack(" ", ""));
 		return 0;
 	}
 
 	if (!isatty(0)) {
 		while (fgets(buf, sizeof buf, stdin) != NULL)
 			process(buf);
-		printstk("\n");
+		puts(format_stack(" ", ""));
 		return 0;
 	}
 
+	if (getenv("HOME")) {
+		asprintf(&histfile, "%s/.rpn_history", getenv("HOME"));
+		linenoiseHistoryLoad(histfile);
+	}
+
 	linenoiseSetCompletionCallback(completion);
-	/*linenoiseSetHintsCallback(hints);*/
 
 	asprintf(&prompt, "> ");
 	while ((line = linenoise(prompt)) != NULL) {
 		if (line[0] != '\0') {
-			linenoiseHistoryAdd(line);
-			linenoiseHistorySave(history);
+			if (histfile) {
+				linenoiseHistoryAdd(line);
+				linenoiseHistorySave(histfile);
+			}
 			process(line);
 			free(line);
 			free(prompt);
-			prompt = format_stack(" ");
+			prompt = format_stack(" ", "> ");
 		}
 	}
 
