@@ -5,11 +5,17 @@ LFLAGS=-lm
 
 OBJS=rpn.o cmd.o linenoise.o
 
-rpn: $(OBJS)
-	$(CC) $(CFLAGS) -o rpn $(OBJS) $(LFLAGS)
+all: 
+	@$(MAKE) uname$$(uname -s)
 
-linux: $(OBJS)
+uname:
+	@echo Error: unknown operating system
+
+unameLinux: $(OBJS)
 	$(CC) $(CFLAGS) -o rpn $(OBJS) $(LFLAGS) -lbsd
+
+unameOpenBSD: $(OBJS)
+	$(CC) $(CFLAGS) -o rpn $(OBJS) $(LFLAGS)
 
 clean:
 	-rm -f rpn $(OBJS)
