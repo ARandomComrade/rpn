@@ -28,10 +28,12 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __linux__
+#include <bsd/stdlib.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
-/*#include <bsd/stdlib.h>*/
 #include <arpa/inet.h>
 #include "rpn.h"
 

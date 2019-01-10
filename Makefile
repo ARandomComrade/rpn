@@ -8,6 +8,9 @@ OBJS=rpn.o cmd.o linenoise.o
 rpn: $(OBJS)
 	$(CC) $(CFLAGS) -o rpn $(OBJS) $(LFLAGS)
 
+linux: $(OBJS)
+	$(CC) $(CFLAGS) -o rpn $(OBJS) $(LFLAGS) -lbsd
+
 clean:
 	-rm -f rpn $(OBJS)
 

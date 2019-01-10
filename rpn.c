@@ -5,6 +5,9 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef __linux__
+#include <bsd/stdlib.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -14,6 +17,10 @@
 #include <assert.h>
 #include <unistd.h>
 #include "rpn.h"
+
+#ifdef __linux__
+extern int asprintf (char **__restrict __ptr, const char *__restrict __fmt, ...);
+#endif
 
 int base = DEFBASE, stop = 0;
 struct metastack *M = NULL;
