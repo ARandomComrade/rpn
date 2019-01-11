@@ -130,19 +130,20 @@ popobj(struct object *obj)
 	free(obj);
 }
 
+#define CONVERTMAX 99
 static char *
 convertbase(unsigned long num, int base)
 {
-	static char converted[100];
+	static char converted[CONVERTMAX + 1];
 	static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 	int i;
 
-	converted[99] = '\0';
-	for (i=98; num && i; i--) {
+	converted[CONVERTMAX] = '\0';
+	for (i=CONVERTMAX - 1; num && i; i--) {
 		converted[i] = digits[num % base];
 		num = num / base;
 	}
-	while (padcount > 98 - i) {
+	while (padcount > CONVERTMAX - 1 - i ) {
 		converted[i--] = digits[0];
 	}
 	return &converted[i+1];
@@ -244,6 +245,7 @@ process(char *str)
 					*tmp++ = *tmp2++;
 			}
 			*tmp++ = *tmp2++;
+			/* XXX strol EINVAL if base>36 */
 			if (word[0] == '-')
 				pushnum(strtol(word, NULL, atoi(suffix)));
 			else
