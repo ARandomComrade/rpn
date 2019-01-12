@@ -5,9 +5,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __linux__
-#include <bsd/stdlib.h>
-#endif
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -17,10 +14,6 @@
 #include <assert.h>
 #include <unistd.h>
 #include "rpn.h"
-
-#ifdef __linux__
-extern int asprintf (char **__restrict __ptr, const char *__restrict __fmt, ...);
-#endif
 
 int base = DEFBASE, stop = 0;
 struct metastack *M = NULL;
@@ -153,13 +146,13 @@ static char *
 format_stack(char *sep, char *prompt)
 {
 	struct object *obj;
-	char *str;
+	char *str, buf[100];
 	int len;
 
 	for (len = 0, obj = M->b; obj != NULL; obj = obj->prev) {
 		if (base == 10) {
-			len += asprintf(&str, "%.12g%s", obj->num, sep);
-			free(str);
+			snprintf(buf, sizeof(buf), "%.12g%s", obj->num, sep);
+			len += strlen(buf);
 		} else
 			len += strlen(convertbase(obj->num, base));
 	}
@@ -350,13 +343,14 @@ main(int argc, char *argv[])
 	}
 
 	if (getenv("HOME")) {
-		asprintf(&histfile, "%s/.rpn_history", getenv("HOME"));
+		histfile = malloc(strlen(getenv("HOME")) + 13);
+		sprintf(histfile, "%s/.rpn_history", getenv("HOME"));
 		linenoiseHistoryLoad(histfile);
 	}
 
 	linenoiseSetCompletionCallback(completion);
 
-	asprintf(&prompt, "> ");
+	prompt = strdup("> ");
 	while ((line = linenoise(prompt)) != NULL) {
 		if (line[0] != '\0') {
 			if (histfile) {

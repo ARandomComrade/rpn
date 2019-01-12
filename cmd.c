@@ -28,9 +28,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __linux__
-#include <bsd/stdlib.h>
-#endif
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
@@ -458,7 +455,7 @@ cmd_quit(void)
 static void
 cmd_rand(void)
 {
-	pushnum(arc4random());
+	pushnum(random());
 }
 
 static void
@@ -827,21 +824,32 @@ completion(const char *buf, linenoiseCompletions *lc)
 {
 	int x;
 	struct macro *macro;
+	char tmp[1000];
+	char *ptr = (char *)buf;
 	size_t len = strlen(buf);
 	if (!len)
 		return;
 
+	if (strrchr(buf, ' ')) {
+		ptr = strrchr(buf, ' ') + 1;
+		len = strlen(ptr);
+	}
+
 	for (x = 0; x < NUMCMDS; x++) {
-		if (!strncmp(buf, commands[x].name, len))
-			linenoiseAddCompletion(lc, commands[x].name);
+		if (!strncmp(ptr, commands[x].name, len)) {
+			snprintf(tmp, sizeof(tmp), "%.*s%s", (int)(strlen(buf) - strlen(ptr)), buf, commands[x].name);
+			linenoiseAddCompletion(lc, tmp);
+		}
 	}
 
 	if (macrohead != NULL) {
 		for (macro = macrohead, x = 0; macro != NULL; macro = macro->next) {
 			if (macro->name[0] == '$')
 				continue;
-			if (!strncmp(buf, macro->name, len))
-				linenoiseAddCompletion(lc, macro->name);
+			if (!strncmp(ptr, macro->name, len)) {
+				snprintf(tmp, sizeof(tmp), "%.*s%s", (int)(strlen(buf) - strlen(ptr)), buf, macro->name);
+				linenoiseAddCompletion(lc, tmp);
+			}
 		}
 	}
 }
