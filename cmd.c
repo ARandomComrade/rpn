@@ -785,7 +785,6 @@ cmdcmp(const void *cmd, const void *cmdptr)
 	return strcmp(((struct command *)cmd)->name, ((struct command *)cmdptr)->name);
 }
 
-
 static void
 cmdrefresh(void) {
 	qsort(commands, numcmds, sizeof *commands, cmdcmp);

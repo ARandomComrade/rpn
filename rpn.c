@@ -26,7 +26,7 @@ extern int repeat;
 
 struct object *
 top(void) {
-	return(M->t);
+	return (M->t);
 }
 
 static void
@@ -41,7 +41,6 @@ push(struct object *obj)
 		M->t = obj;
 		M->t->prev = NULL;
 	}
-
 	M->d++;
 }
 
@@ -64,7 +63,7 @@ countstack(void)
 	unsigned cnt = 0;
 	struct object *o = NULL;
 
-	for(o = top(); o; o = o->next)
+	for (o = top(); o; o = o->next)
 		cnt += 1;
 
 	return cnt;
@@ -89,10 +88,10 @@ peeknthnum(unsigned off)
 {
 	struct object *o = top();
 
-	while(off--)
+	while (off--)
 		o = o->next;
 
-	return(o->num);
+	return (o->num);
 }
 
 double
@@ -299,7 +298,6 @@ popstack(void) {
 		M = M->n;
 		if (o)
 			pushnum(o->num);
-
 		freestack(m);
 	}
 }
@@ -322,7 +320,6 @@ init(void) {
 int
 main(int argc, char *argv[])
 {
-	char buf[1000];
 	char *line, *prompt, *histfile;
 
 	init();
@@ -336,6 +333,7 @@ main(int argc, char *argv[])
 	}
 
 	if (!isatty(0)) {
+		char buf[1000];
 		while (fgets(buf, sizeof buf, stdin) != NULL)
 			process(buf);
 		puts(format_stack(" ", ""));
@@ -366,3 +364,4 @@ main(int argc, char *argv[])
 
 	return 0;
 }
+

@@ -24,7 +24,8 @@ struct metastack {
 
 struct object {
 	double num;
-	struct object *prev, *next;
+	struct object *prev;
+	struct object *next;
 };
 
 struct command {
@@ -34,18 +35,23 @@ struct command {
 };
 
 struct macro {
-	char *name, *operation;
-	struct macro *prev, *next;
+	char *name;
+	char *operation;
+	struct macro *prev;
+	struct macro *next;
 };
 
 void addcommand(struct command *c);
-struct object *top(void);
-char *findmacro(char *);
-double popnum(void);
-struct object *pop(void);
-struct command *findcmd(char *);
-void popobj(struct object *), pushnum(double), init_macros(void), error(char *);
-unsigned countstack(void);
-double peeknthnum(unsigned off);
 void completion(const char *, linenoiseCompletions *);
+unsigned countstack(void);
+void error(char *);
+struct command *findcmd(char *);
+char *findmacro(char *);
+void init_macros(void);
+double peeknthnum(unsigned off);
+struct object *pop(void);
+double popnum(void);
+void popobj(struct object *);
+void pushnum(double);
+struct object *top(void);
 
