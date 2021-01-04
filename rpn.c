@@ -341,7 +341,7 @@ main(int argc, char *argv[])
 	}
 
 	if (getenv("HOME")) {
-		histfile = malloc(strlen(getenv("HOME")) + 13);
+		histfile = malloc(strlen(getenv("HOME")) + 14);
 		sprintf(histfile, "%s/.rpn_history", getenv("HOME"));
 		linenoiseHistoryLoad(histfile);
 	}
