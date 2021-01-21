@@ -1,16 +1,19 @@
-# Makefile for Unix, using GNU C
+#CFLAGS=-g -Wall -Wstrict-prototypes -ansi -pedantic
+CFLAGS=-g -Wall
+LFLAGS=-lm
 
-CC = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes -ansi -pedantic 
-CFLAGS = -g
-LFLAGS = -lm 
+OBJS=rpn.o cmd.o linenoise.o
 
-OBJS = rpn.o cmd.o
-
-rpn: $(OBJS)
+all: $(OBJS)
 	$(CC) $(CFLAGS) -o rpn $(OBJS) $(LFLAGS)
 
 clean:
 	-rm -f rpn $(OBJS)
 
-$(OBJS): rpn.h
+install:
+	install -s rpn /usr/local/bin/rpn
+
+tags:
+	ctags *.c *.h
+
+$(OBJS): rpn.h linenoise.h
