@@ -2,16 +2,23 @@
 discount 100 / 2 pick * -
 
 # reverse of discount
-markup 100 / 1.0 swap - / 
+markup 100 / 1.0 swap - /
+
+# (cost retail -- margin)
+margin dup rot - swap /
+
+# (cost margin -- retail)
+retail 1 swap - /
+
 
 # convert to megabytes
-meg 1024 1024 * * 
+meg 1024 1024 * *
 
 # convert to kilobytes
 k 1024 *
 
 # value-of-the-word-containing-this-set-bit
-bit 1 swap << 
+bit 1 swap <<
 
 # set the bit on the stack into the word preceding it
 set bit |
@@ -19,9 +26,9 @@ set bit |
 # opposite of "set"
 unset bit ~ &
 
-# produce the word with a bit set for every position on 
+# produce the word with a bit set for every position on
 # the stack
-$cbit swap set 
+$cbit swap set
 bits bit depth -- repeat $cbit
 
 # > 15 fill -> 15 14 13 12 etc
@@ -32,3 +39,9 @@ fill dup repeat $-step
 $ihlstep dup 4 * swap --
 $ihls dup repeat $ihlstep
 ihls 15 $ihls
+
+# (oz/yd2 -- g/m2)
+gsm 33.906 *
+
+# (g/m2 -- oz/yd2)
+osy 33.906 /
