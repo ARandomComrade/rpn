@@ -1,7 +1,3 @@
-/*
- * rpn - Mycroft <mycroft@datasphere.net>
- */
-
 #define VERSION     0.51
 
 #define MAXSIZE     10

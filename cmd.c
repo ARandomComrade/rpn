@@ -1,8 +1,4 @@
 /*
- * rpn - Mycroft <mycroft@datasphere.net>
- */
-
-/*
  * Things to do:
  *  - Arbitrary-precision math
  *  - Variables
