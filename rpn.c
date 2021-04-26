@@ -347,6 +347,7 @@ main(int argc, char *argv[])
 	}
 
 	linenoiseSetCompletionCallback(completion);
+	linenoiseSetMultiLine(1);
 
 	prompt = strdup("> ");
 	while ((line = linenoise(prompt)) != NULL) {
