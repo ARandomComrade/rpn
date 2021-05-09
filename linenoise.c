@@ -817,6 +817,9 @@ static int linenoiseEdit(int stdin_fd, int stdout_fd, char *buf, size_t buflen, 
      * initially is just an empty string. */
     linenoiseHistoryAdd("");
 
+    /* account for long prompts */
+    if (l.plen > l.cols) l.maxrows = 1 + (l.plen / l.cols);
+
     if (write(l.ofd,prompt,l.plen) == -1) return -1;
     while(1) {
         char c;
