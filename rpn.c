@@ -1,7 +1,3 @@
-/*
- * rpn - Mycroft <mycroft@datasphere.net>
- */
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +8,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include <assert.h>
+#include <unistd.h>
 #include "rpn.h"
 
 int base = DEFBASE, stop = 0;
@@ -25,7 +22,7 @@ extern int repeat;
 
 struct object *
 top(void) {
-	return(M->t);
+	return (M->t);
 }
 
 static void
@@ -40,7 +37,6 @@ push(struct object *obj)
 		M->t = obj;
 		M->t->prev = NULL;
 	}
-
 	M->d++;
 }
 
@@ -63,7 +59,7 @@ countstack(void)
 	unsigned cnt = 0;
 	struct object *o = NULL;
 
-	for(o = top(); o; o = o->next)
+	for (o = top(); o; o = o->next)
 		cnt += 1;
 
 	return cnt;
@@ -88,10 +84,10 @@ peeknthnum(unsigned off)
 {
 	struct object *o = top();
 
-	while(off--)
+	while (off--)
 		o = o->next;
 
-	return(o->num);
+	return (o->num);
 }
 
 double
@@ -117,52 +113,53 @@ popobj(struct object *obj)
 		else
 			obj->next->prev = obj->prev;
 		obj->prev->next = obj->next;
-
 		M->d--;
 	}
 	free(obj);
 }
 
-static void
-printnum(unsigned long num, int base, int padto)
+#define CONVERTMAX 99
+static char *
+convertbase(unsigned long num, int base)
 {
-	static char str[sizeof num * CHAR_BIT], *ptr = str;
-	static char nums[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	int padc = 0;
+	static char converted[CONVERTMAX + 1];
+	static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+	int i;
 
-	do
-		*ptr++ = nums[num % base];
-	while ((num /= base) != 0);
-
-	padc = padto - (ptr - str);
-	while(padc > 0)
-		padc--, putchar('0');
-
-	while (ptr > str) {
-		putchar(*--ptr);
-		if(base == 2 && ((unsigned long)ptr % 4) == 0)
-			putchar('.');
+	converted[CONVERTMAX] = '\0';
+	for (i=CONVERTMAX - 1; num && i; i--) {
+		converted[i] = digits[num % base];
+		num = num / base;
 	}
-
-	putchar(' ');
+	while (padcount > CONVERTMAX - 1 - i ) {
+		converted[i--] = digits[0];
+	}
+	return &converted[i+1];
 }
 
-static void
-printstk(char *prompt)
+static char *
+format_stack(char *sep, char *prompt)
 {
 	struct object *obj;
+	char *str, buf[100];
+	int len;
 
-	for (obj = M->b; obj != NULL; obj = obj->prev) {
-		if (base == 10)
-			printf("%.12g ", obj->num);
-		else
-			printnum(obj->num, base, padcount);
-
-		if(stackmode && obj->prev)
-			putchar('\n');
+	for (len = 0, obj = M->b; obj != NULL; obj = obj->prev) {
+		if (base == 10) {
+			snprintf(buf, sizeof(buf), "%.12g%s", obj->num, sep);
+			len += strlen(buf);
+		} else
+			len += strlen(convertbase(obj->num, base));
 	}
-
-	fputs(prompt, stdout);
+	str = calloc(1, len + strlen(prompt) + 1);
+	for (len = 0, obj = M->b; obj != NULL; obj = obj->prev) {
+		if (base == 10) {
+			len += sprintf(str + len, "%.12g%s", obj->num, sep);
+		} else
+			len += sprintf(str + len, "%s%s", convertbase(obj->num, base), sep);
+	}
+	strcpy(str + len, prompt);
+	return str;
 }
 
 static void
@@ -216,7 +213,7 @@ process(char *str)
 {
 	int x;
 	char *suffix, word[100];
-        char *tmp, *tmp2;
+	char *tmp, *tmp2;
 
 	while (*str != '\0') {
 		while (isspace(*str))
@@ -228,23 +225,28 @@ process(char *str)
 		word[x] = '\0';
 		if ((suffix = strchr(word, BASECHAR)) != NULL) {
 			*suffix++ = '\0';
-                        tmp = tmp2 = word;
-                        while (*tmp2 != '\0') {
-                            if (*tmp2 == ',') tmp2++;
-                            else *tmp++ = *tmp2++;
-                        }
-                        *tmp++ = *tmp2++;
+			tmp = tmp2 = word;
+			while (*tmp2 != '\0') {
+				if (*tmp2 == ',')
+					tmp2++;
+				else
+					*tmp++ = *tmp2++;
+			}
+			*tmp++ = *tmp2++;
+			/* XXX strol EINVAL if base>36 */
 			if (word[0] == '-')
 				pushnum(strtol(word, NULL, atoi(suffix)));
 			else
 				pushnum(strtoul(word, NULL, atoi(suffix)));
 		} else if (isnum(word)) {
-                        tmp = tmp2 = word;
-                        while (*tmp2 != '\0') {
-                            if (*tmp2 == ',') tmp2++;
-                            else *tmp++ = *tmp2++;
-                        }
-                        *tmp++ = *tmp2++;
+			tmp = tmp2 = word;
+			while (*tmp2 != '\0') {
+				if (*tmp2 == ',')
+					tmp2++;
+				else
+					*tmp++ = *tmp2++;
+			}
+			*tmp++ = *tmp2++;
 			if (isnotfloat(word)) {
 				if (word[0] == '-')
 					pushnum(strtol(word, &suffix, 0));
@@ -266,15 +268,13 @@ process(char *str)
 	}
 }
 
-int isatty(int);
-
 static void
 pushstack(void) {
 	struct metastack *m = malloc(sizeof *m);
 	struct object *o = top();
 	m->n = M;
 	M = m;
-	if(o)
+	if (o)
 		pushnum(o->num);
 }
 
@@ -289,12 +289,11 @@ freestack(struct metastack *m) {
 static void
 popstack(void) {
 	struct object *o = top();
-	if(M->n) {
+	if (M->n) {
 		struct metastack *m = M;
 		M = M->n;
-		if(o)
+		if (o)
 			pushnum(o->num);
-
 		freestack(m);
 	}
 }
@@ -302,7 +301,7 @@ popstack(void) {
 static void
 init(void) {
 	struct command pushs = { "pushs", 0, pushstack },
-   	 	       pops = { "pops", 0, popstack };
+			pops = { "pops", 0, popstack };
 	addcommand(&pushs);
 	addcommand(&pops);
 	srand(time(NULL));
@@ -317,26 +316,49 @@ init(void) {
 int
 main(int argc, char *argv[])
 {
+	char *line, *prompt, *histfile;
+
 	init();
 
 	if (argc > 1) {
 		int x;
 		for (x = 1; x < argc; x++)
 			process(argv[x]);
-		printstk("\n");
-	} else {
-		int interactive = isatty(0);
+		puts(format_stack(" ", ""));
+		return 0;
+	}
+
+	if (!isatty(0)) {
 		char buf[1000];
-		if (interactive)
-			printstk("> ");
-		while (fgets(buf, sizeof buf, stdin) != NULL) {
+		while (fgets(buf, sizeof buf, stdin) != NULL)
 			process(buf);
-			if (interactive)
-				printstk("> ");
+		puts(format_stack(" ", ""));
+		return 0;
+	}
+
+	if (getenv("HOME")) {
+		histfile = malloc(strlen(getenv("HOME")) + 14);
+		sprintf(histfile, "%s/.rpn_history", getenv("HOME"));
+		linenoiseHistoryLoad(histfile);
+	}
+
+	linenoiseSetCompletionCallback(completion);
+	linenoiseSetMultiLine(1);
+
+	prompt = strdup("> ");
+	while ((line = linenoise(prompt)) != NULL) {
+		if (line[0] != '\0') {
+			if (histfile) {
+				linenoiseHistoryAdd(line);
+				linenoiseHistorySave(histfile);
+			}
+			process(line);
+			free(line);
+			free(prompt);
+			prompt = format_stack(" ", "> ");
 		}
-		if (!interactive)
-			printstk("\n");
 	}
 
 	return 0;
 }
+

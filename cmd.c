@@ -1,8 +1,4 @@
 /*
- * rpn - Mycroft <mycroft@datasphere.net>
- */
-
-/*
  * Things to do:
  *	- Arbitrary-precision math
  *	- Variables
@@ -31,6 +27,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 #include "rpn.h"
 
 int repeat = 1;
@@ -454,7 +451,7 @@ cmd_quit(void)
 static void
 cmd_rand(void)
 {
-	pushnum(rand());
+	pushnum(random());
 }
 
 static void
@@ -639,24 +636,27 @@ init_macros(void)
 	addmacro("?", "help");
 
 	if (env) {
-	    char buf[10240];
-	    FILE *fp;
-	    sprintf(buf, "%s/.rpn_macros", env);
+		char buf[10240];
+		FILE *fp;
+		char *p;
+		snprintf(buf, sizeof(buf), "%s/.rpn_macros", env);
 
-	    fp = fopen(buf, "r");
-	    if (fp) {
-		while (fgets(buf, sizeof(buf), fp) != NULL) {
-		    if(buf[0] == '#')
-			continue;
+		fp = fopen(buf, "r");
+		if (fp) {
+			while (fgets(buf, sizeof(buf), fp) != NULL) {
+				if (buf[0] == '#')
+					continue;
 
-		    char *p = buf;
-		    while (*p && *p != ' ') p++;
-		    if (*p) {
-			*p++ = 0;
-			addmacro(strdup(buf), strdup(p));
-		    }
+				p = buf;
+				while (*p && *p != ' ')
+					p++;
+
+				if (*p) {
+					*p++ = 0;
+					addmacro(strdup(buf), strdup(p));
+				}
+			}
 		}
-	    }
 	}
 }
 
@@ -761,7 +761,7 @@ cmd_help(void)
 	if (macrohead != NULL) {
 		puts("Macros:");
 		for (macro = macrohead, x = 0; macro != NULL; macro = macro->next) {
-			if(macro->name[0] == '$')
+			if (macro->name[0] == '$')
 				continue;
 
 			printf("%8s", macro->name);
@@ -781,7 +781,6 @@ cmdcmp(const void *cmd, const void *cmdptr)
 	return strcmp(((struct command *)cmd)->name, ((struct command *)cmdptr)->name);
 }
 
-
 static void
 cmdrefresh(void) {
 	qsort(commands, numcmds, sizeof *commands, cmdcmp);
@@ -789,10 +788,10 @@ cmdrefresh(void) {
 
 void
 addcommand(struct command *c) {
-	if(!roomcmds) {
+	if (!roomcmds) {
 		struct command *ca = malloc((numcmds * 2) * sizeof *commands);
 		memcpy(ca, commands, numcmds * sizeof *commands);
-		if(commands != _commands)
+		if (commands != _commands)
 			free(commands);
 
 		commands = ca;
@@ -814,3 +813,39 @@ findcmd(char *cmd)
 
 	return bsearch(&c, commands, numcmds, sizeof *commands, cmdcmp);
 }
+
+void
+completion(const char *buf, linenoiseCompletions *lc)
+{
+	int x;
+	struct macro *macro;
+	char tmp[1000];
+	char *ptr = (char *)buf;
+	size_t len = strlen(buf);
+	if (!len)
+		return;
+
+	if (strrchr(buf, ' ')) {
+		ptr = strrchr(buf, ' ') + 1;
+		len = strlen(ptr);
+	}
+
+	for (x = 0; x < NUMCMDS; x++) {
+		if (!strncmp(ptr, commands[x].name, len)) {
+			snprintf(tmp, sizeof(tmp), "%.*s%s", (int)(strlen(buf) - strlen(ptr)), buf, commands[x].name);
+			linenoiseAddCompletion(lc, tmp);
+		}
+	}
+
+	if (macrohead != NULL) {
+		for (macro = macrohead, x = 0; macro != NULL; macro = macro->next) {
+			if (macro->name[0] == '$')
+				continue;
+			if (!strncmp(ptr, macro->name, len)) {
+				snprintf(tmp, sizeof(tmp), "%.*s%s", (int)(strlen(buf) - strlen(ptr)), buf, macro->name);
+				linenoiseAddCompletion(lc, tmp);
+			}
+		}
+	}
+}
+
