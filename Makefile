@@ -1,6 +1,7 @@
 #CFLAGS=-g -Wall -Wstrict-prototypes -ansi -pedantic
 CFLAGS=-g -Wall
 LFLAGS=-lm
+CC=cc
 
 OBJS=rpn.o cmd.o linenoise.o
 
